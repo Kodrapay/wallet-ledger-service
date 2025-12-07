@@ -14,7 +14,10 @@ type LedgerHandler struct {
 func NewLedgerHandler(svc *services.LedgerService) *LedgerHandler { return &LedgerHandler{svc: svc} }
 
 func (h *LedgerHandler) GetBalance(c *fiber.Ctx) error {
-	merchantID := c.Params("merchantId")
+	merchantID, err := c.ParamsInt("merchantId") // Use c.ParamsInt
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid merchant ID")
+	}
 	return c.JSON(h.svc.GetBalance(c.Context(), merchantID))
 }
 

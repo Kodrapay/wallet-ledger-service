@@ -12,11 +12,11 @@ import (
 // WalletRepository defines the interface for wallet and ledger data operations
 type WalletRepository interface {
 	CreateWallet(ctx context.Context, wallet *models.Wallet) error
-	GetWalletByUserIDAndCurrency(ctx context.Context, userID, currency string) (*models.Wallet, error)
-	GetWalletByID(ctx context.Context, id string) (*models.Wallet, error)
-	UpdateWalletBalance(ctx context.Context, walletID string, amount int64) error
+	GetWalletByUserIDAndCurrency(ctx context.Context, userID int, currency string) (*models.Wallet, error)
+	GetWalletByID(ctx context.Context, id int) (*models.Wallet, error)
+	UpdateWalletBalance(ctx context.Context, walletID int, amount int64) error
 	CreateLedgerEntry(ctx context.Context, entry *models.LedgerEntry) error
-	GetLedgerEntriesByWalletID(ctx context.Context, walletID string) ([]models.LedgerEntry, error)
+	GetLedgerEntriesByWalletID(ctx context.Context, walletID int) ([]models.LedgerEntry, error)
 }
 
 // postgresWalletRepository implements WalletRepository for PostgreSQL
@@ -30,12 +30,16 @@ func NewPostgresWalletRepository(db *sql.DB) WalletRepository {
 }
 
 func (r *postgresWalletRepository) CreateWallet(ctx context.Context, wallet *models.Wallet) error {
-	query := `INSERT INTO wallets (id, user_id, currency, balance, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err := r.db.ExecContext(ctx, query, wallet.ID, wallet.UserID, wallet.Currency, wallet.Balance, wallet.CreatedAt, wallet.UpdatedAt)
+	query := `INSERT INTO wallets (user_id, currency, balance, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	var id int
+	err := r.db.QueryRowContext(ctx, query, wallet.UserID, wallet.Currency, wallet.Balance, wallet.CreatedAt, wallet.UpdatedAt).Scan(&id)
+	if err == nil {
+		wallet.ID = id
+	}
 	return err
 }
 
-func (r *postgresWalletRepository) GetWalletByUserIDAndCurrency(ctx context.Context, userID, currency string) (*models.Wallet, error) {
+func (r *postgresWalletRepository) GetWalletByUserIDAndCurrency(ctx context.Context, userID int, currency string) (*models.Wallet, error) {
 	wallet := &models.Wallet{}
 	query := `SELECT id, user_id, currency, balance, created_at, updated_at FROM wallets WHERE user_id = $1 AND currency = $2`
 	err := r.db.QueryRowContext(ctx, query, userID, currency).Scan(&wallet.ID, &wallet.UserID, &wallet.Currency, &wallet.Balance, &wallet.CreatedAt, &wallet.UpdatedAt)
@@ -45,7 +49,7 @@ func (r *postgresWalletRepository) GetWalletByUserIDAndCurrency(ctx context.Cont
 	return wallet, err
 }
 
-func (r *postgresWalletRepository) GetWalletByID(ctx context.Context, id string) (*models.Wallet, error) {
+func (r *postgresWalletRepository) GetWalletByID(ctx context.Context, id int) (*models.Wallet, error) {
 	wallet := &models.Wallet{}
 	query := `SELECT id, user_id, currency, balance, created_at, updated_at FROM wallets WHERE id = $1`
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&wallet.ID, &wallet.UserID, &wallet.Currency, &wallet.Balance, &wallet.CreatedAt, &wallet.UpdatedAt)
@@ -55,19 +59,23 @@ func (r *postgresWalletRepository) GetWalletByID(ctx context.Context, id string)
 	return wallet, err
 }
 
-func (r *postgresWalletRepository) UpdateWalletBalance(ctx context.Context, walletID string, amount int64) error {
+func (r *postgresWalletRepository) UpdateWalletBalance(ctx context.Context, walletID int, amount int64) error {
 	query := `UPDATE wallets SET balance = balance + $1, updated_at = $2 WHERE id = $3`
 	_, err := r.db.ExecContext(ctx, query, amount, time.Now(), walletID)
 	return err
 }
 
 func (r *postgresWalletRepository) CreateLedgerEntry(ctx context.Context, entry *models.LedgerEntry) error {
-	query := `INSERT INTO ledger_entries (id, wallet_id, reference, type, amount, balance, description, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
-	_, err := r.db.ExecContext(ctx, query, entry.ID, entry.WalletID, entry.Reference, entry.Type, entry.Amount, entry.Balance, entry.Description, entry.CreatedAt)
+	query := `INSERT INTO ledger_entries (wallet_id, reference, type, amount, balance, description, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	var id int
+	err := r.db.QueryRowContext(ctx, query, entry.WalletID, entry.Reference, entry.Type, entry.Amount, entry.Balance, entry.Description, entry.CreatedAt).Scan(&id)
+	if err == nil {
+		entry.ID = id
+	}
 	return err
 }
 
-func (r *postgresWalletRepository) GetLedgerEntriesByWalletID(ctx context.Context, walletID string) ([]models.LedgerEntry, error) {
+func (r *postgresWalletRepository) GetLedgerEntriesByWalletID(ctx context.Context, walletID int) ([]models.LedgerEntry, error) {
 	var entries []models.LedgerEntry
 	query := `SELECT id, wallet_id, reference, type, amount, balance, description, created_at FROM ledger_entries WHERE wallet_id = $1 ORDER BY created_at DESC`
 	rows, err := r.db.QueryContext(ctx, query, walletID)

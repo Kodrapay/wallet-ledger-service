@@ -22,7 +22,7 @@ func NewWalletService(repo repositories.WalletRepository) *WalletService {
 
 func (s *WalletService) CreateWallet(ctx context.Context, req dto.CreateWalletRequest) (*dto.WalletResponse, error) {
 	// Check if wallet already exists for this user and currency
-	existingWallet, err := s.repo.GetWalletByUserIDAndCurrency(ctx, req.UserID, req.Currency)
+	existingWallet, err := s.repo.GetWalletByUserIDAndCurrency(ctx, req.UserID, req.Currency) // int
 	if err != nil {
 		return nil, fmt.Errorf("failed to check for existing wallet: %w", err)
 	}
@@ -30,14 +30,14 @@ func (s *WalletService) CreateWallet(ctx context.Context, req dto.CreateWalletRe
 		return nil, errors.New("wallet already exists for this user and currency")
 	}
 
-	wallet := models.NewWallet(req.UserID, req.Currency)
+	wallet := models.NewWallet(req.UserID, req.Currency) // int
 	if err := s.repo.CreateWallet(ctx, wallet); err != nil {
 		return nil, fmt.Errorf("failed to create wallet: %w", err)
 	}
 
 	return &dto.WalletResponse{
-		ID:        wallet.ID,
-		UserID:    wallet.UserID,
+		ID:        wallet.ID,        // int
+		UserID:    wallet.UserID,    // int
 		Currency:  wallet.Currency,
 		Balance:   wallet.Balance,
 		CreatedAt: wallet.CreatedAt,
@@ -45,8 +45,8 @@ func (s *WalletService) CreateWallet(ctx context.Context, req dto.CreateWalletRe
 	}, nil
 }
 
-func (s *WalletService) GetWalletByID(ctx context.Context, walletID string) (*dto.WalletResponse, error) {
-	wallet, err := s.repo.GetWalletByID(ctx, walletID)
+func (s *WalletService) GetWalletByID(ctx context.Context, walletID int) (*dto.WalletResponse, error) { // int
+	wallet, err := s.repo.GetWalletByID(ctx, walletID) // int
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wallet: %w", err)
 	}
@@ -55,8 +55,8 @@ func (s *WalletService) GetWalletByID(ctx context.Context, walletID string) (*dt
 	}
 
 	return &dto.WalletResponse{
-		ID:        wallet.ID,
-		UserID:    wallet.UserID,
+		ID:        wallet.ID,        // int
+		UserID:    wallet.UserID,    // int
 		Currency:  wallet.Currency,
 		Balance:   wallet.Balance,
 		CreatedAt: wallet.CreatedAt,
@@ -64,8 +64,8 @@ func (s *WalletService) GetWalletByID(ctx context.Context, walletID string) (*dt
 	}, nil
 }
 
-func (s *WalletService) GetWalletByUserIDAndCurrency(ctx context.Context, userID, currency string) (*dto.WalletResponse, error) {
-	wallet, err := s.repo.GetWalletByUserIDAndCurrency(ctx, userID, currency)
+func (s *WalletService) GetWalletByUserIDAndCurrency(ctx context.Context, userID int, currency string) (*dto.WalletResponse, error) { // int
+	wallet, err := s.repo.GetWalletByUserIDAndCurrency(ctx, userID, currency) // int
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wallet by user ID and currency: %w", err)
 	}
@@ -74,8 +74,8 @@ func (s *WalletService) GetWalletByUserIDAndCurrency(ctx context.Context, userID
 	}
 
 	return &dto.WalletResponse{
-		ID:        wallet.ID,
-		UserID:    wallet.UserID,
+		ID:        wallet.ID,        // int
+		UserID:    wallet.UserID,    // int
 		Currency:  wallet.Currency,
 		Balance:   wallet.Balance,
 		CreatedAt: wallet.CreatedAt,
@@ -83,8 +83,8 @@ func (s *WalletService) GetWalletByUserIDAndCurrency(ctx context.Context, userID
 	}, nil
 }
 
-func (s *WalletService) UpdateWalletBalance(ctx context.Context, walletID string, req dto.UpdateBalanceRequest) (*dto.WalletResponse, error) {
-	wallet, err := s.repo.GetWalletByID(ctx, walletID)
+func (s *WalletService) UpdateWalletBalance(ctx context.Context, walletID int, req dto.UpdateBalanceRequest) (*dto.WalletResponse, error) { // int
+	wallet, err := s.repo.GetWalletByID(ctx, walletID) // int
 	if err != nil {
 		return nil, fmt.Errorf("failed to get wallet for update: %w", err)
 	}
@@ -102,12 +102,12 @@ func (s *WalletService) UpdateWalletBalance(ctx context.Context, walletID string
 	}
 
 	// Update wallet balance
-	if err := s.repo.UpdateWalletBalance(ctx, walletID, amountChange); err != nil {
+	if err := s.repo.UpdateWalletBalance(ctx, walletID, amountChange); err != nil { // int
 		return nil, fmt.Errorf("failed to update wallet balance: %w", err)
 	}
 
 	// Get updated wallet to record current balance in ledger
-	updatedWallet, err := s.repo.GetWalletByID(ctx, walletID)
+	updatedWallet, err := s.repo.GetWalletByID(ctx, walletID) // int
 	if err != nil {
 		return nil, fmt.Errorf("failed to get updated wallet: %w", err)
 	}
@@ -117,8 +117,8 @@ func (s *WalletService) UpdateWalletBalance(ctx context.Context, walletID string
 
 	// Create ledger entry
 	ledgerEntry := models.NewLedgerEntry(
-		walletID,
-		req.Reference,
+		walletID,        // int
+		req.Reference,   // int
 		req.Type,
 		req.Amount,
 		updatedWallet.Balance, // Current balance after update
@@ -129,8 +129,8 @@ func (s *WalletService) UpdateWalletBalance(ctx context.Context, walletID string
 	}
 
 	return &dto.WalletResponse{
-		ID:        updatedWallet.ID,
-		UserID:    updatedWallet.UserID,
+		ID:        updatedWallet.ID,        // int
+		UserID:    updatedWallet.UserID,    // int
 		Currency:  updatedWallet.Currency,
 		Balance:   updatedWallet.Balance,
 		CreatedAt: updatedWallet.CreatedAt,
@@ -138,8 +138,8 @@ func (s *WalletService) UpdateWalletBalance(ctx context.Context, walletID string
 	}, nil
 }
 
-func (s *WalletService) GetWalletLedger(ctx context.Context, walletID string) ([]dto.LedgerEntryResponse, error) {
-	entries, err := s.repo.GetLedgerEntriesByWalletID(ctx, walletID)
+func (s *WalletService) GetWalletLedger(ctx context.Context, walletID int) ([]dto.LedgerEntryResponse, error) { // int
+	entries, err := s.repo.GetLedgerEntriesByWalletID(ctx, walletID) // int
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ledger entries: %w", err)
 	}
@@ -147,9 +147,9 @@ func (s *WalletService) GetWalletLedger(ctx context.Context, walletID string) ([
 	var resp []dto.LedgerEntryResponse
 	for _, entry := range entries {
 		resp = append(resp, dto.LedgerEntryResponse{
-			ID:          entry.ID,
-			WalletID:    entry.WalletID,
-			Reference:   entry.Reference,
+			ID:          entry.ID,          // int
+			WalletID:    entry.WalletID,    // int
+			Reference:   entry.Reference,   // int
 			Type:        entry.Type,
 			Amount:      entry.Amount,
 			Balance:     entry.Balance,

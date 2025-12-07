@@ -4,22 +4,22 @@ import "time"
 
 // CreateWalletRequest DTO for creating a new wallet
 type CreateWalletRequest struct {
-	UserID   string `json:"user_id"`
+	UserID   int    `json:"user_id"`
 	Currency string `json:"currency"`
 }
 
 // UpdateBalanceRequest DTO for updating a wallet's balance (credit/debit)
 type UpdateBalanceRequest struct {
 	Amount      int64  `json:"amount"`
-	Reference   string `json:"reference"` // Unique reference for the transaction
+	Reference   int    `json:"reference"` // Unique reference for the transaction
 	Description string `json:"description"`
 	Type        string `json:"type"`      // "credit" or "debit"
 }
 
 // WalletResponse DTO for returning wallet information
 type WalletResponse struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
 	Currency  string    `json:"currency"`
 	Balance   int64     `json:"balance"`
 	CreatedAt time.Time `json:"created_at"`
@@ -28,9 +28,9 @@ type WalletResponse struct {
 
 // LedgerEntryResponse DTO for returning a ledger entry
 type LedgerEntryResponse struct {
-	ID          string    `json:"id"`
-	WalletID    string    `json:"wallet_id"`
-	Reference   string    `json:"reference"`
+	ID          int       `json:"id"`
+	WalletID    int       `json:"wallet_id"`
+	Reference   int       `json:"reference"`
 	Type        string    `json:"type"`
 	Amount      int64     `json:"amount"`
 	Balance     int64     `json:"balance"`

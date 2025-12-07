@@ -23,7 +23,7 @@ func (h *WalletHandler) CreateWallet(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
-	if req.UserID == "" || req.Currency == "" {
+	if req.UserID == 0 || req.Currency == "" { // int check
 		return fiber.NewError(fiber.StatusBadRequest, "user_id and currency are required")
 	}
 
@@ -36,9 +36,9 @@ func (h *WalletHandler) CreateWallet(c *fiber.Ctx) error {
 
 // GetWalletByID handles requests to get a wallet by its ID
 func (h *WalletHandler) GetWalletByID(c *fiber.Ctx) error {
-	walletID := c.Params("id")
-	if walletID == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "wallet ID is required")
+	walletID, err := c.ParamsInt("id") // Use c.ParamsInt
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid wallet ID")
 	}
 
 	resp, err := h.svc.GetWalletByID(c.Context(), walletID)
@@ -53,9 +53,9 @@ func (h *WalletHandler) GetWalletByID(c *fiber.Ctx) error {
 
 // GetWalletByUserIDAndCurrency handles requests to get a wallet by user ID and currency
 func (h *WalletHandler) GetWalletByUserIDAndCurrency(c *fiber.Ctx) error {
-	userID := c.Query("user_id")
+	userID := c.QueryInt("user_id", 0) // Use c.QueryInt
 	currency := c.Query("currency")
-	if userID == "" || currency == "" {
+	if userID == 0 || currency == "" { // int check
 		return fiber.NewError(fiber.StatusBadRequest, "user_id and currency are required query parameters")
 	}
 
@@ -71,16 +71,16 @@ func (h *WalletHandler) GetWalletByUserIDAndCurrency(c *fiber.Ctx) error {
 
 // UpdateWalletBalance handles requests to credit or debit a wallet
 func (h *WalletHandler) UpdateWalletBalance(c *fiber.Ctx) error {
-	walletID := c.Params("id")
-	if walletID == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "wallet ID is required")
+	walletID, err := c.ParamsInt("id") // Use c.ParamsInt
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid wallet ID")
 	}
 
 	var req dto.UpdateBalanceRequest
 	if err := c.BodyParser(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
-	if req.Amount <= 0 || req.Reference == "" || (req.Type != "credit" && req.Type != "debit") {
+	if req.Amount <= 0 || req.Reference == 0 || (req.Type != "credit" && req.Type != "debit") { // int check
 		return fiber.NewError(fiber.StatusBadRequest, "positive amount, reference, and valid type ('credit'/'debit') are required")
 	}
 
@@ -96,9 +96,9 @@ func (h *WalletHandler) UpdateWalletBalance(c *fiber.Ctx) error {
 
 // GetWalletLedger handles requests to get ledger entries for a wallet
 func (h *WalletHandler) GetWalletLedger(c *fiber.Ctx) error {
-	walletID := c.Params("id")
-	if walletID == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "wallet ID is required")
+	walletID, err := c.ParamsInt("id") // Use c.ParamsInt
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid wallet ID")
 	}
 
 	resp, err := h.svc.GetWalletLedger(c.Context(), walletID)
