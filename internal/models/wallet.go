@@ -2,14 +2,12 @@ package models
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Wallet represents a customer's wallet
 type Wallet struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
 	Currency  string    `json:"currency"`
 	Balance   int64     `json:"balance"` // Stored in cents/smallest unit
 	CreatedAt time.Time `json:"created_at"`
@@ -17,9 +15,9 @@ type Wallet struct {
 }
 
 // NewWallet creates a new Wallet instance
-func NewWallet(userID, currency string) *Wallet {
+func NewWallet(userID int, currency string) *Wallet {
 	return &Wallet{
-		ID:        "wal_" + uuid.NewString(),
+		ID:        0, // Will be set by DB
 		UserID:    userID,
 		Currency:  currency,
 		Balance:   0,
@@ -30,9 +28,9 @@ func NewWallet(userID, currency string) *Wallet {
 
 // LedgerEntry represents an entry in the transaction ledger for a wallet
 type LedgerEntry struct {
-	ID          string    `json:"id"`
-	WalletID    string    `json:"wallet_id"`
-	Reference   string    `json:"reference"` // Reference to the external transaction
+	ID          int       `json:"id"`
+	WalletID    int       `json:"wallet_id"`
+	Reference   int       `json:"reference"` // Reference to the external transaction
 	Type        string    `json:"type"`      // "credit" or "debit"
 	Amount      int64     `json:"amount"`    // Stored in cents/smallest unit
 	Balance     int64     `json:"balance"`   // Balance of the wallet after this entry
@@ -41,9 +39,9 @@ type LedgerEntry struct {
 }
 
 // NewLedgerEntry creates a new LedgerEntry instance
-func NewLedgerEntry(walletID, reference, entryType string, amount, balance int64, description string) *LedgerEntry {
+func NewLedgerEntry(walletID, reference int, entryType string, amount, balance int64, description string) *LedgerEntry {
 	return &LedgerEntry{
-		ID:          "lge_" + uuid.NewString(),
+		ID:          0, // Will be set by DB
 		WalletID:    walletID,
 		Reference:   reference,
 		Type:        entryType,
